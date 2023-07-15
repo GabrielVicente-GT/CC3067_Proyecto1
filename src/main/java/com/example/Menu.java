@@ -90,7 +90,7 @@ public class Menu
                     case 2:
                         System.out.println("Login in...");
                         // In progres
-                        // LogIn(scanner);
+                        LogIn(scanner);
                         break;
                     default:
                         System.out.println("\n--> Invalid option. Please select an option from 1 to 4.\n");
@@ -142,6 +142,127 @@ public class Menu
             }
         }
 
+        private static void LogIn(Scanner scanner) {
+            System.out.println("Ingrese el nombre de usuario:");
+            String username = scanner.next();
+            System.out.println("Ingrese la contraseña:");
+            String password = scanner.next();
+    
+            try {
+                XMPPTCPConnectionConfiguration config = XMPPTCPConnectionConfiguration.builder()
+                .setXmppDomain("alumchat.xyz")
+                .setHost("alumchat.xyz")
+                .setUsernameAndPassword(username, password)
+                .setSecurityMode(ConnectionConfiguration.SecurityMode.disabled)
+                .build();
+    
+                AbstractXMPPConnection connection = new XMPPTCPConnection(config);
+                connection.connect();
+                
+                if (connection.isConnected()) {
+    
+    
+                    try {
+                            
+    
+                        connection.login(username, password);
+    
+                        if (connection.isAuthenticated()) {
+                            System.out.println("You are in!\n");
+                        } else {
+                            System.out.println("Get out! Register first.\n");
+                        }
+    
+                        int choice;
+    
+    
+                        // * Main cycle of the User Menu
+                        do {
+                            System.out.println("\nUser Menu:\n");
+                            System.out.println("1.) Show all contacts and their status");
+                            System.out.println("2.) Add a user to contacts");
+                            System.out.println("3.) Show contact details of a user");
+                            System.out.println("4.) 1 to 1 communication with any user/contact");
+                            System.out.println("5.) Participate in group conversations");
+                            System.out.println("6.) Define presence message");
+                            System.out.println("7.) Send/receive notifications");
+                            System.out.println("8.) Send/receive files");
+                            System.out.println("9.) Log Out");
+                            System.out.println("10.) Delete Account\n");
+                            System.out.print("Select an option: ");
+    
+                            
+                            try {
+                                choice = scanner.nextInt();
+    
+                                // * User selection
+    
+                                switch (choice) {
+                                    case 1:
+                                        System.out.println("Seleccionaste la Opción 1");
+                                        // printContactInfo(connection);
+                                        break;
+                                    case 2:
+                                        System.out.println("Seleccionaste la Opción 2");
+                                        // addContact(connection, scanner);
+                                        break;
+                                    case 3:
+                                        System.out.println("Seleccionaste la Opción 3");
+                                        // showUserDetails(connection, scanner);
+                                        break;
+                                    case 4:
+                                        System.out.println("Seleccionaste la Opción 4");
+                                        // sendChatMessage(connection, scanner);
+                                        // openChat(connection, scanner);
+                                        break;
+                                    case 5:
+                                        System.out.println("Seleccionaste la Opción 5");
+    
+                                        break;
+                                    case 6:
+                                        System.out.println("Seleccionaste la Opción 6");
+    
+                                        break;
+                                    case 7:
+                                        System.out.println("Seleccionaste la Opción 7");
+                                        break;
+                                    case 8:
+                                        System.out.println("Seleccionaste la Opción 8");
+                                        break;
+                                    case 9:
+                                        System.out.println("Seleccionaste la Opción 9");
+                                        // connection.disconnect();
+                                        choice = 12;
+                                        break;
+                                    case 10:
+                                        System.out.println("Seleccionaste la Opción 10");
+                                        // DeleteUser(connection);
+                                        // connection.disconnect();
+                                        choice = 12;
+                                        break;
+                                    default:
+                                        System.out.println("\n--> Invalid option. Please select an option from 1 to 4.\n");
+                                }
+                                
+                            } catch (Exception e) {
+                                System.out.println("\n--> Invalid option. Please select an option from 1 to 4.\n");
+                                scanner.nextLine();
+                                choice = 0;
+                            }
+    
+                        } while (choice != 12);
+                    } catch (Exception e) {
+                        System.out.println("Get out! Register first.\n");
+                    }
+                } else {
+                    System.out.println("Inicio de sesión fallido.");
+                }
+    
+            } catch (Exception e) {
+                System.out.println("Error al iniciar sesión.");
+                e.printStackTrace();
+            }
+        }
 
 }
 
