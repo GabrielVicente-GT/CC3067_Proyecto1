@@ -212,7 +212,7 @@ public class Menu
                                         break;
                                     case 4:
                                         System.out.println("Seleccionaste la Opción 4");
-                                        // sendChatMessage(connection, scanner);
+                                        sendChatMessage(connection, scanner);
                                         // openChat(connection, scanner);
                                         break;
                                     case 5:
@@ -263,6 +263,29 @@ public class Menu
                 e.printStackTrace();
             }
         }
+
+        private static void sendChatMessage(AbstractXMPPConnection connection, Scanner scanner) {
+            try {
+                System.out.print("Ingrese el nombre de usuario del destinatario: ");
+                String recipientUsername = scanner.next() + "@" + "alumchat.xyz";
+    
+                System.out.print("Ingrese el mensaje: ");
+                String message = scanner.nextLine(); // Consumir la nueva línea pendiente
+                message = scanner.nextLine(); // Leer el mensaje ingresado
+    
+                ChatManager chatManager = ChatManager.getInstanceFor(connection);
+                EntityBareJid recipientJid = JidCreate.entityBareFrom(recipientUsername);
+    
+                Chat chat = chatManager.chatWith(recipientJid);
+                chat.send(message);
+    
+                System.out.println("Mensaje enviado correctamente a " + recipientUsername);
+            } catch (Exception e) {
+                System.out.println("Error al enviar el mensaje.");
+                e.printStackTrace();
+            }
+        }
+    
 
 }
 
