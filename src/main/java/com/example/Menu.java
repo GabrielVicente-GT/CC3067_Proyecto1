@@ -212,8 +212,8 @@ public class Menu
                                         break;
                                     case 4:
                                         System.out.println("Seleccionaste la Opción 4");
-                                        sendChatMessage(connection, scanner);
-                                        // openChat(connection, scanner);
+                                        // sendChatMessage(connection, scanner);
+                                        openChat(connection, scanner);
                                         break;
                                     case 5:
                                         System.out.println("Seleccionaste la Opción 5");
@@ -282,6 +282,44 @@ public class Menu
                 System.out.println("Mensaje enviado correctamente a " + recipientUsername);
             } catch (Exception e) {
                 System.out.println("Error al enviar el mensaje.");
+                e.printStackTrace();
+            }
+        }
+
+        private static void openChat(AbstractXMPPConnection connection, Scanner scanner) {
+            try {
+                System.out.print("Ingrese el nombre de usuario del destinatario: ");
+                String recipientUsername = scanner.next() + "@" + "alumchat.xyz";
+                ChatManager chatManager = ChatManager.getInstanceFor(connection);
+                EntityBareJid jid = JidCreate.entityBareFrom(recipientUsername);
+                Chat chat = chatManager.chatWith(jid);
+    
+    
+                chatManager.addIncomingListener(new IncomingChatMessageListener() {
+                @Override
+                public void newIncomingMessage(EntityBareJid from, Message message, Chat chat) {
+                    System.out.println("New message from " + from + ": " + message.getBody());
+                }
+                });
+    
+                Boolean chating = true;
+    
+                while (chating) {
+                    System.out.print(" >> ");
+                    String message = scanner.nextLine();
+    
+                    if (message.equalsIgnoreCase("exit")) {
+                        System.out.println("Saliendo del chat.");
+                        chating = false;
+                        break;
+                    }
+    
+                    chat.send(message);
+                    System.out.println("Mensaje enviado: " + message);
+                }
+    
+            } catch (Exception e) {
+                System.out.println("Error al abrir el chat o enviar mensajes.");
                 e.printStackTrace();
             }
         }
