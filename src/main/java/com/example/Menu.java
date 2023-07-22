@@ -110,17 +110,17 @@ public class Menu
 
     // * Method that allows the registration of a user. The following video was taken as a reference https://youtu.be/iAuc3wp5Mt4
     public static void RegisterUser(Scanner scanner) {
-            System.out.print("Ingrese su nombre de usuario: ");
+            System.out.print("User Name: ");
             String username = scanner.next();
             
-            System.out.print("Ingrese su contraseña: ");
+            System.out.print("Password");
             String password = scanner.next();
             
             String domain = "alumchat.xyz";
             
             try {
                     XMPPTCPConnectionConfiguration config = XMPPTCPConnectionConfiguration.builder()
-                    .setXmppDomain("alumchat.xyz")
+                    .setXmppDomain(domain)
                     .setHost(domain)
                     .setUsernameAndPassword(username, password)
                     .setSecurityMode(ConnectionConfiguration.SecurityMode.disabled)
@@ -135,23 +135,23 @@ public class Menu
 
                     connection.disconnect();
 
-                System.out.println("¡Registro exitoso en " + domain + "!");
+                System.out.println("Now you are registered in  " + domain + "!");
             } catch (SmackException | IOException | XMPPException | InterruptedException e) {
                 e.printStackTrace();
-                System.out.println("Error en el registro: " + e.getMessage());
+                System.out.println("Failed to register:  " + e.getMessage());
             }
         }
 
         private static void LogIn(Scanner scanner) {
-            System.out.println("Ingrese el nombre de usuario:");
+            System.out.println("User name: ");
             String username = scanner.next();
-            System.out.println("Ingrese la contraseña:");
+            System.out.println("Password");
             String password = scanner.next();
-    
+            String domain = "alumchat.xyz";
             try {
                 XMPPTCPConnectionConfiguration config = XMPPTCPConnectionConfiguration.builder()
-                .setXmppDomain("alumchat.xyz")
-                .setHost("alumchat.xyz")
+                .setXmppDomain(domain)
+                .setHost(domain)
                 .setUsernameAndPassword(username, password)
                 .setSecurityMode(ConnectionConfiguration.SecurityMode.disabled)
                 .build();
@@ -199,43 +199,43 @@ public class Menu
     
                                 switch (choice) {
                                     case 1:
-                                        System.out.println("Seleccionaste la Opción 1");
+                                        System.out.println("Option -->   1");
                                         // printContactInfo(connection);
                                         break;
                                     case 2:
-                                        System.out.println("Seleccionaste la Opción 2");
+                                        System.out.println("Option -->   2");
                                         // addContact(connection, scanner);
                                         break;
                                     case 3:
-                                        System.out.println("Seleccionaste la Opción 3");
+                                        System.out.println("Option -->   3");
                                         // showUserDetails(connection, scanner);
                                         break;
                                     case 4:
-                                        System.out.println("Seleccionaste la Opción 4");
+                                        System.out.println("Option -->   4");
                                         // sendChatMessage(connection, scanner);
                                         openChat(connection, scanner);
                                         break;
                                     case 5:
-                                        System.out.println("Seleccionaste la Opción 5");
+                                        System.out.println("Option -->   5");
     
                                         break;
                                     case 6:
-                                        System.out.println("Seleccionaste la Opción 6");
+                                        System.out.println("Option -->   6");
     
                                         break;
                                     case 7:
-                                        System.out.println("Seleccionaste la Opción 7");
+                                        System.out.println("Option -->   7");
                                         break;
                                     case 8:
-                                        System.out.println("Seleccionaste la Opción 8");
+                                        System.out.println("Option -->   8");
                                         break;
                                     case 9:
-                                        System.out.println("Seleccionaste la Opción 9");
+                                        System.out.println("Option -->   9");
                                         // connection.disconnect();
                                         choice = 12;
                                         break;
                                     case 10:
-                                        System.out.println("Seleccionaste la Opción 10");
+                                        System.out.println("Option -->   10");
                                         // DeleteUser(connection);
                                         // connection.disconnect();
                                         choice = 12;
@@ -255,40 +255,18 @@ public class Menu
                         System.out.println("Get out! Register first.\n");
                     }
                 } else {
-                    System.out.println("Inicio de sesión fallido.");
+                    System.out.println("Failed to log in... try again");
                 }
     
             } catch (Exception e) {
-                System.out.println("Error al iniciar sesión.");
-                e.printStackTrace();
-            }
-        }
-
-        private static void sendChatMessage(AbstractXMPPConnection connection, Scanner scanner) {
-            try {
-                System.out.print("Ingrese el nombre de usuario del destinatario: ");
-                String recipientUsername = scanner.next() + "@" + "alumchat.xyz";
-    
-                System.out.print("Ingrese el mensaje: ");
-                String message = scanner.nextLine(); // Consumir la nueva línea pendiente
-                message = scanner.nextLine(); // Leer el mensaje ingresado
-    
-                ChatManager chatManager = ChatManager.getInstanceFor(connection);
-                EntityBareJid recipientJid = JidCreate.entityBareFrom(recipientUsername);
-    
-                Chat chat = chatManager.chatWith(recipientJid);
-                chat.send(message);
-    
-                System.out.println("Mensaje enviado correctamente a " + recipientUsername);
-            } catch (Exception e) {
-                System.out.println("Error al enviar el mensaje.");
+                System.out.println("Failed to log in... try again");
                 e.printStackTrace();
             }
         }
 
         private static void openChat(AbstractXMPPConnection connection, Scanner scanner) {
             try {
-                System.out.print("Ingrese el nombre de usuario del destinatario: ");
+                System.out.print("User Name you wanna talk: ");
                 String recipientUsername = scanner.next() + "@" + "alumchat.xyz";
                 ChatManager chatManager = ChatManager.getInstanceFor(connection);
                 EntityBareJid jid = JidCreate.entityBareFrom(recipientUsername);
@@ -309,17 +287,17 @@ public class Menu
                     String message = scanner.nextLine();
     
                     if (message.equalsIgnoreCase("exit")) {
-                        System.out.println("Saliendo del chat.");
+                        System.out.println("Leaving the chat");
                         chating = false;
                         break;
                     }
     
                     chat.send(message);
-                    System.out.println("Mensaje enviado: " + message);
+                    System.out.println("Message sended:  " + message);
                 }
     
             } catch (Exception e) {
-                System.out.println("Error al abrir el chat o enviar mensajes.");
+                System.out.println("Failed to chat... try again");
                 e.printStackTrace();
             }
         }
