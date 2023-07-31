@@ -142,6 +142,9 @@ public class Menu
             }
         }
 
+        // The big menu it is gonna be LogIn Because it has the connection with de domain, so its is easier if the user select from here
+        // and I just call the ramaining funcions
+
         private static void LogIn(Scanner scanner) {
             System.out.println("User name: ");
             String username = scanner.next();
@@ -163,7 +166,6 @@ public class Menu
     
     
                     try {
-                            
     
                         connection.login(username, password);
     
@@ -200,7 +202,7 @@ public class Menu
                                 switch (choice) {
                                     case 1:
                                         System.out.println("Option -->   1");
-                                        // printContactInfo(connection);
+                                        printContactInfo(connection);
                                         break;
                                     case 2:
                                         System.out.println("Option -->   2");
@@ -208,11 +210,10 @@ public class Menu
                                         break;
                                     case 3:
                                         System.out.println("Option -->   3");
-                                        // showUserDetails(connection, scanner);
+                                        showUserDetails(connection, scanner);
                                         break;
                                     case 4:
                                         System.out.println("Option -->   4");
-                                        // sendChatMessage(connection, scanner);
                                         openChat(connection, scanner);
                                         break;
                                     case 5:
@@ -231,13 +232,12 @@ public class Menu
                                         break;
                                     case 9:
                                         System.out.println("Option -->   9");
-                                        // connection.disconnect();
+                                        connection.disconnect();
                                         choice = 12;
                                         break;
                                     case 10:
                                         System.out.println("Option -->   10");
-                                        // DeleteUser(connection);
-                                        // connection.disconnect();
+                                        DeleteUser(connection);
                                         choice = 12;
                                         break;
                                     default:
@@ -302,6 +302,75 @@ public class Menu
             }
         }
     
+        private static void showUserDetails(AbstractXMPPConnection connection, Scanner scanner) {
+            try {
+                Roster roster = Roster.getInstanceFor(connection);
+        
+                System.out.print("Ingrese el nombre de usuario del contacto: ");
+                String username = scanner.next() + "@" + "alumchat.xyz";
+        
+                RosterEntry entry = roster.getEntry(JidCreate.bareFrom(username));
+        
+                if (entry != null) {
+                    System.out.println("\nDetalles del Usuario:\n");
+                    System.out.println("Nombre de usuario: " + entry.getJid().getLocalpartOrNull().toString());
+                    System.out.println("Estado: " + extractTypeValue(roster.getPresence(entry.getJid()).toString()) + "\n");
+                } else {
+                    System.out.println("El usuario " + username + " no está en la lista de contactos.");
+                }
+        
+            } catch (Exception e) {
+                System.out.println("Error al obtener los detalles del usuario.");
+                e.printStackTrace();
+            }
+        }
+
+        
+        private static void DeleteUser(AbstractXMPPConnection connection) {
+            String domain = "alumchat.xyz";
+            try {
+
+                AccountManager accountManager = AccountManager.getInstance(connection);
+                accountManager.sensitiveOperationOverInsecureConnection(true);
+                accountManager.deleteAccount();
+
+                System.out.println("¡Cuenta eliminada exitosamente en " + domain + "!");
+            } catch (SmackException | XMPPException | InterruptedException e) {
+                e.printStackTrace();
+                System.out.println("Error al eliminar la cuenta: " + e.getMessage());
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("Error inesperado: " + e.getMessage());
+            }
+        }
+
+        private static void printContactInfo(AbstractXMPPConnection connection) {
+            try {
+                Roster roster = Roster.getInstanceFor(connection);
+                System.out.println("\nContact List:\n");
+    
+                for (RosterEntry entry : roster.getEntries()) {
+                    System.out.println("User: " + entry.getJid().getLocalpartOrNull().toString());
+                    System.out.println("Status: " + extractTypeValue(roster.getPresence(entry.getJid()).toString()) + "\n");
+                }
+            } catch (Exception e) {
+                System.out.println("Error while fetching contact information.");
+                e.printStackTrace();
+            }
+        }
+
+        public static String extractTypeValue(String input) {
+            int typeIndex = input.indexOf("type=");
+            if (typeIndex != -1) {
+                String typeAndRest = input.substring(typeIndex + 5);
+                
+                int commaIndex = typeAndRest.indexOf(',');
+                if (commaIndex != -1) {
+                    return typeAndRest.substring(0, commaIndex);
+                }
+            }
+            return null; // Retorna null si no se encuentra 'type=' o la coma
+        }
 
 }
 
