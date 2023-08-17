@@ -19,28 +19,31 @@ to manipulate xml and thus communicate with the "alumchat.xyz" domain.
 
 package com.example;
 
+import java.io.FileInputStream;
+import java.util.Base64;
 import java.io.IOException;
-// import java.lang.reflect.Method;
 
 // * The main library used in this project is Smack and then the specific methods 
 // * used are called, the dependencies are inside the pom.xml file.
 
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.jivesoftware.smack.*;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
-import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
 import org.jivesoftware.smack.chat2.Chat;
 import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
+import org.jivesoftware.smack.filter.StanzaFilter;
+import org.jivesoftware.smack.filter.StanzaTypeFilter;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.iqregister.AccountManager;
-import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
-import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.parts.Localpart;
 
@@ -58,13 +61,12 @@ public class Menu
 
         // * Unique welcome print
 
-        System.out.println("\n ----------------------------------------------------------------------------------------------------");
-        System.out.println(" ------------------------------ Project 1 - Using an existing protocol ------------------------------");
-        System.out.println(" ---------------------------------------------------------------------- Author: Gabriel Vicente 20498\n");
+        System.out.println("\n ----------------------------------------------------------------------");
+        System.out.println(" --------------- Project 1 - Using an existing protocol ---------------");
+        System.out.println(" ---------------------------------------- Author: Gabriel Vicente 20498\n");
 
         // * Scanner instance to receive terminal information
         Scanner scanner = new Scanner(System.in);
-        
 
         // * User selection
         int choice;
@@ -75,6 +77,7 @@ public class Menu
             System.out.println("\nAccount Management Menu:\n");
             System.out.println("1.) Register a new account on the server");
             System.out.println("2.) Sign in with an account");
+            System.out.println("3.) Bye client!");
             System.out.print("Select an option: ");
 
             
@@ -88,9 +91,12 @@ public class Menu
                         RegisterUser(scanner);
                         break;
                     case 2:
-                        System.out.println("Login in...");
-                        // In progres
+                        System.out.println("\nLogin in...\n");
                         LogIn(scanner);
+                        break;
+                    case 3:
+                        System.out.println("\nBye Bye!!!!!!!! :D\n");
+                        choice = 4;
                         break;
                     default:
                         System.out.println("\n--> Invalid option. Please select an option from 1 to 4.\n");
@@ -113,7 +119,7 @@ public class Menu
             System.out.print("User Name: ");
             String username = scanner.next();
             
-            System.out.print("Password");
+            System.out.print("Password: ");
             String password = scanner.next();
             
             String domain = "alumchat.xyz";
@@ -146,9 +152,9 @@ public class Menu
         // and I just call the ramaining funcions
 
         private static void LogIn(Scanner scanner) {
-            System.out.println("User name: ");
+            System.out.print("User name: ");
             String username = scanner.next();
-            System.out.println("Password");
+            System.out.print("Password: ");
             String password = scanner.next();
             String domain = "alumchat.xyz";
             try {
@@ -166,7 +172,9 @@ public class Menu
     
     
                     try {
-    
+
+                        // if the connection it is succesful we can continue, otherwise the program stops
+
                         connection.login(username, password);
     
                         if (connection.isAuthenticated()) {
@@ -175,22 +183,89 @@ public class Menu
                             System.out.println("Get out! Register first.\n");
                         }
     
+                        // This is the principal choice that allows to use all the functions possibles
                         int choice;
-    
-    
+
+                        // * This listener is always ready to receives files and messages and print in a fancy way
+                        ChatManager listening = ChatManager.getInstanceFor(connection);
+
+                        listening.addIncomingListener(new IncomingChatMessageListener() {
+                        @Override
+                        public void newIncomingMessage(EntityBareJid sender, Message text, Chat chat) {
+                            if(!text.getBody().toString().equals("")){
+                                if(isBase64Encoded(text.getBody().toString())){
+                                    byte[] decodedBytes = Base64.getDecoder().decode(text.getBody().toString());
+                                    String decodedString = new String(decodedBytes);
+                                    System.out.println("\nText file from  " +sender +" : " + decodedString);
+                                    System.out.println("Original text   : " + text.getBody());
+                                    System.out.print("\n>> ");
+                                }else{
+                                    System.out.println("\nMessage from "+sender + ": " + text.getBody());
+                                    System.out.print("\n>> ");
+                                }
+
+                            }
+                        }
+
+                        // * This function allows to encode the file
+
+                        public boolean isBase64Encoded(String input) {
+                            String base64Pattern = "^[A-Za-z0-9+/]*={0,2}$";
+                            Pattern pattern = Pattern.compile(base64Pattern);
+                            Matcher matcher = pattern.matcher(input);
+                            return matcher.matches();
+                        }
+                        });
+
+                        // This listener is destined to always listen to notification presence about chances in the state and mode, 
+                        try {
+                            StanzaFilter presenceFilter = new StanzaTypeFilter(Presence.class);
+                            connection.addAsyncStanzaListener(new StanzaListener() {
+                                @Override
+                                public void processStanza(Stanza stanza) {
+                                    if (stanza instanceof Presence) {
+                                        Presence presence = (Presence) stanza;
+                                        if (presence.getType() == Presence.Type.available) {
+                                            System.out.println("\n\nNotification: " + presence.getFrom() + "\nNow my mode is " + presence.getMode());
+                                        } else if(presence.getType() == Presence.Type.unavailable){
+                                            System.out.println("\n\nNotification: " + presence.getFrom() + "\nis " + presence.getStatus() + "\n");
+                                        }
+                                System.out.println("\n0.) Refresh all!");
+                                System.out.println("1.) Show all contacts and their status");
+                                System.out.println("2.) Add a user to contacts");
+                                System.out.println("3.) Show contact details of a user");
+                                System.out.println("4.) 1 to 1 communication with any user/contact");
+                                System.out.println("5.) Participate in group conversations");
+                                System.out.println("6.) Define presence message (And change status)");
+                                System.out.println("7.) Send files");
+                                System.out.println("8.) Log Out");
+                                System.out.println("9.) Delete Account\n");
+                                System.out.print("Select an option: ");
+                                    }
+                                }
+                            }, presenceFilter);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        
+
+
                         // * Main cycle of the User Menu
                         do {
+                            Roster roster = Roster.getInstanceFor(connection);
+                            roster.setSubscriptionMode(Roster.SubscriptionMode.accept_all);
                             System.out.println("\nUser Menu:\n");
+
+                            System.out.println("\n0.) Refresh all!");
                             System.out.println("1.) Show all contacts and their status");
                             System.out.println("2.) Add a user to contacts");
                             System.out.println("3.) Show contact details of a user");
                             System.out.println("4.) 1 to 1 communication with any user/contact");
                             System.out.println("5.) Participate in group conversations");
-                            System.out.println("6.) Define presence message");
-                            System.out.println("7.) Send/receive notifications");
-                            System.out.println("8.) Send/receive files");
-                            System.out.println("9.) Log Out");
-                            System.out.println("10.) Delete Account\n");
+                            System.out.println("6.) Define presence message (And change status)");
+                            System.out.println("7.) Send files");
+                            System.out.println("8.) Log Out");
+                            System.out.println("9.) Delete Account\n");
                             System.out.print("Select an option: ");
     
                             
@@ -200,21 +275,27 @@ public class Menu
                                 // * User selection
     
                                 switch (choice) {
+
+                                    // * Every choice leads to a funcion that only requires conecction to funcion
+                                    case 0:
+                                        System.out.println("Option -->   0");
+                                        RefreshRequests(connection);
+                                        break;
                                     case 1:
                                         System.out.println("Option -->   1");
-                                        printContactInfo(connection);
+                                        Contacts(connection);
                                         break;
                                     case 2:
                                         System.out.println("Option -->   2");
-                                        addContact(connection, scanner);
+                                        AddContact(connection, scanner);
                                         break;
                                     case 3:
                                         System.out.println("Option -->   3");
-                                        showUserDetails(connection, scanner);
+                                        SpecificContact(connection, scanner);
                                         break;
                                     case 4:
                                         System.out.println("Option -->   4");
-                                        openChat(connection, scanner);
+                                        ChatWithContact(connection, scanner);
                                         break;
                                     case 5:
                                         System.out.println("Option -->   5");
@@ -222,22 +303,20 @@ public class Menu
                                         break;
                                     case 6:
                                         System.out.println("Option -->   6");
-    
+                                        ChangeStatusPresence(connection, scanner);
                                         break;
                                     case 7:
                                         System.out.println("Option -->   7");
+                                        FileToContact(connection, scanner);
                                         break;
                                     case 8:
                                         System.out.println("Option -->   8");
-                                        break;
-                                    case 9:
-                                        System.out.println("Option -->   9");
                                         connection.disconnect();
                                         choice = 12;
                                         break;
-                                    case 10:
-                                        System.out.println("Option -->   10");
-                                        DeleteUser(connection);
+                                    case 9:
+                                        System.out.println("Option -->   9");
+                                        DeleteAccount(connection);
                                         choice = 12;
                                         break;
                                     default:
@@ -252,7 +331,7 @@ public class Menu
     
                         } while (choice != 12);
                     } catch (Exception e) {
-                        System.out.println("Get out! Register first.\n");
+                        System.out.println("Get out! Register first please.\n");
                     }
                 } else {
                     System.out.println("Failed to log in... try again");
@@ -264,36 +343,32 @@ public class Menu
             }
         }
 
-        private static void openChat(AbstractXMPPConnection connection, Scanner scanner) {
+        // * This function allows to create a chat and interact with messages with anothe user
+        // * this link was usefull to create this funcion and with IA some corrections were made
+        // * The reference of this link it is used https://www.baeldung.com/xmpp-smack-chat-client
+
+        private static void ChatWithContact(AbstractXMPPConnection connection, Scanner scanner) {
             try {
                 System.out.print("User Name you wanna talk: ");
                 String recipientUsername = scanner.next() + "@" + "alumchat.xyz";
+                scanner.nextLine();
                 ChatManager chatManager = ChatManager.getInstanceFor(connection);
                 EntityBareJid jid = JidCreate.entityBareFrom(recipientUsername);
                 Chat chat = chatManager.chatWith(jid);
-    
-    
-                chatManager.addIncomingListener(new IncomingChatMessageListener() {
-                @Override
-                public void newIncomingMessage(EntityBareJid from, Message message, Chat chat) {
-                    System.out.println("New message from " + from + ": " + message.getBody());
-                }
-                });
     
                 Boolean chating = true;
     
                 while (chating) {
                     System.out.print(" >> ");
                     String message = scanner.nextLine();
-    
-                    if (message.equalsIgnoreCase("exit")) {
-                        System.out.println("Leaving the chat");
+
+                    if (message.equalsIgnoreCase("/LEAVE")) {
+                        System.out.println("\nLeaving the chat\n");
                         chating = false;
                         break;
                     }
-    
+                    message = message + " ";
                     chat.send(message);
-                    System.out.println("Message sended:  " + message);
                 }
     
             } catch (Exception e) {
@@ -301,8 +376,10 @@ public class Menu
                 e.printStackTrace();
             }
         }
-    
-        private static void showUserDetails(AbstractXMPPConnection connection, Scanner scanner) {
+        
+        // * This function is like a child from the previus one that shows all contact information
+        // * perplexity was usefull in this function
+        private static void SpecificContact(AbstractXMPPConnection connection, Scanner scanner) {
             try {
                 Roster roster = Roster.getInstanceFor(connection);
         
@@ -313,8 +390,10 @@ public class Menu
         
                 if (entry != null) {
                     System.out.println("\nUser Details:\n");
-                    System.out.println("User Name: " + entry.getJid().getLocalpartOrNull().toString());
-                    System.out.println("State: " + extractTypeValue(roster.getPresence(entry.getJid()).toString()) + "\n");
+                    System.out.println("User: " + entry.getJid().getLocalpartOrNull().toString());
+                    System.out.println("Presence message: " + roster.getPresence(entry.getJid()).getStatus());
+                    System.out.println("Modo: " + roster.getPresence(entry.getJid()).getMode());
+                    System.out.println("Status: " + roster.getPresence(entry.getJid()).getType()+ "\n");
                 } else {
                     System.out.println("The user " + username + " is not in the contact list");
                 }
@@ -325,8 +404,10 @@ public class Menu
             }
         }
 
-        
-        private static void DeleteUser(AbstractXMPPConnection connection) {
+        // * Reference: https://stackoverflow.com/questions/31498985/delete-account-using-smack
+        // * it was usefull to clarify the utility of account manager
+
+        private static void DeleteAccount(AbstractXMPPConnection connection) {
             String domain = "alumchat.xyz";
             try {
 
@@ -344,14 +425,22 @@ public class Menu
             }
         }
 
-        private static void printContactInfo(AbstractXMPPConnection connection) {
+        // * It is like the singular shown information of a contact but insted of asking just throw all the infomation
+        private static void Contacts(AbstractXMPPConnection connection) {
             try {
                 Roster roster = Roster.getInstanceFor(connection);
                 System.out.println("\nContact List:\n");
     
                 for (RosterEntry entry : roster.getEntries()) {
                     System.out.println("User: " + entry.getJid().getLocalpartOrNull().toString());
-                    System.out.println("Status: " + extractTypeValue(roster.getPresence(entry.getJid()).toString()) + "\n");
+                    System.out.println("Presence message: " + roster.getPresence(entry.getJid()).getStatus());
+                    if(roster.getPresence(entry.getJid()).getType().toString().equals("unavailable")){
+                        System.out.println("Status: " + roster.getPresence(entry.getJid()).getType()+ "\n");
+                    }else{
+                        System.out.println("Modo: " + roster.getPresence(entry.getJid()).getMode());
+                        System.out.println("Status: " + roster.getPresence(entry.getJid()).getType()+ "\n");
+                    }
+                    
                 }
             } catch (Exception e) {
                 System.out.println("Error while fetching contact information.");
@@ -359,15 +448,19 @@ public class Menu
             }
         }
 
-        private static void addContact(AbstractXMPPConnection connection, Scanner scanner) {
+        // *  This reference have all the basic information, and for add a contact it was usefull
+        //  * https://www.baeldung.com/xmpp-smack-chat-client
+
+        private static void AddContact(AbstractXMPPConnection connection, Scanner scanner) {
             try {
+                
                 Roster roster = Roster.getInstanceFor(connection);
         
                 System.out.print("User Name to add:  ");
                 String username = scanner.next() + "@" + "alumchat.xyz";
         
                 roster.sendSubscriptionRequest(JidCreate.entityBareFrom(username));
-                
+                roster.sendSubscriptionRequest(JidCreate.entityBareFrom(username));
                 System.out.println("Request sent to : " + username);
             } catch (Exception e) {
                 System.out.println("ERROR trying to request");
@@ -375,18 +468,179 @@ public class Menu
             }
         }
 
-        public static String extractTypeValue(String input) {
-            int typeIndex = input.indexOf("type=");
-            if (typeIndex != -1) {
-                String typeAndRest = input.substring(typeIndex + 5);
+        
+        // * This was the most repetitive function, since it was the same for each state, it was based on the five states that gajim 
+        // * shows and the mode and status were tested to see what the settings were for each state. AI was used to know how to make 
+        // * the notification and in this way polish some redundancies that were
+
+        private static void ChangeStatusPresence(AbstractXMPPConnection connection, Scanner scanner) {
+            try {
+
+                System.out.println("\n1.) Available");
+                System.out.println("2.) Absent");
+                System.out.println("3.) Not available");
+                System.out.println("4.) Busy");
+                System.out.println("5.) Disconnected");
+                System.out.println("\nSelect a status:");
                 
-                int commaIndex = typeAndRest.indexOf(',');
-                if (commaIndex != -1) {
-                    return typeAndRest.substring(0, commaIndex);
+                int view = scanner.nextInt();
+                scanner.nextLine();
+                String message;
+                Presence presence;
+                Roster miniroster;
+                switch (view) {
+                    case 1:
+                        System.out.println("\nYou selected: Available");
+                        System.out.print("\nNew Presences Message: ");
+                        message = scanner.nextLine();
+                        presence = new Presence(Presence.Type.available);
+                        presence.setMode(Presence.Mode.available);
+                        presence.setStatus(message);
+
+                        connection.sendStanza(presence);
+                        System.out.println("Presence message changed successfully!");
+
+                        miniroster = Roster.getInstanceFor(connection);
+                        for (RosterEntry entry : miniroster.getEntries()) {
+                            Presence updatedPresence = new Presence(Presence.Type.available);
+                            updatedPresence.setMode(Presence.Mode.available);
+                            updatedPresence.setStatus(message);
+                            updatedPresence.setTo(entry.getJid());
+                            connection.sendStanza(updatedPresence);
+                        }
+                        break;
+                    case 2:
+                        System.out.println("\nYou selected: Absent");
+                        System.out.print("\nNew Presences Message: ");
+                        message = scanner.nextLine();
+                        presence = new Presence(Presence.Type.available);
+                        presence.setMode(Presence.Mode.away);
+                        presence.setStatus(message);
+
+                        connection.sendStanza(presence);
+                        
+                        System.out.println("Presence message changed successfully!");
+                        miniroster = Roster.getInstanceFor(connection);
+                        for (RosterEntry entry : miniroster.getEntries()) {
+                            Presence updatedPresence = new Presence(Presence.Type.available);
+                            updatedPresence.setMode(Presence.Mode.away);
+                            updatedPresence.setStatus(message);
+                            updatedPresence.setTo(entry.getJid());
+                            connection.sendStanza(updatedPresence);
+                        }
+                        break;
+                    case 3:
+                        System.out.println("\nYou selected: Not available");
+                        System.out.print("\nNew Presences Message: ");
+                        message = scanner.nextLine();
+                        presence = new Presence(Presence.Type.available);
+                        presence.setMode(Presence.Mode.xa);
+                        presence.setStatus(message);
+
+                        connection.sendStanza(presence);
+                        
+                        System.out.println("Presence message changed successfully!");
+                        miniroster = Roster.getInstanceFor(connection);
+                        for (RosterEntry entry : miniroster.getEntries()) {
+                            Presence updatedPresence = new Presence(Presence.Type.available);
+                            updatedPresence.setMode(Presence.Mode.xa);
+                            updatedPresence.setStatus(message);
+                            updatedPresence.setTo(entry.getJid());
+                            connection.sendStanza(updatedPresence);
+                        }
+                        break;
+                    case 4:
+                        System.out.println("\nYou selected: Busy");
+                        System.out.print("\nNew Presences Message: ");
+                        message = scanner.nextLine();
+                        presence = new Presence(Presence.Type.available);
+                        presence.setMode(Presence.Mode.dnd);
+                        presence.setStatus(message);
+
+                        connection.sendStanza(presence);
+                        
+                        System.out.println("Presence message changed successfully!");
+                        miniroster = Roster.getInstanceFor(connection);
+                        for (RosterEntry entry : miniroster.getEntries()) {
+                            Presence updatedPresence = new Presence(Presence.Type.available);
+                            updatedPresence.setMode(Presence.Mode.dnd);
+                            updatedPresence.setStatus(message);
+                            updatedPresence.setTo(entry.getJid());
+                            connection.sendStanza(updatedPresence);
+                        }
+                        break;
+                    case 5:
+                        System.out.println("\nYou selected: Disconnected");
+                        System.out.print("\nNew Presences Message: ");
+                        message = scanner.nextLine();
+                        presence = new Presence(Presence.Type.unavailable);
+                        presence.setMode(Presence.Mode.available);
+                        presence.setStatus(message);
+
+                        connection.sendStanza(presence);
+                        
+                        System.out.println("Presence message changed successfully!");
+                        miniroster = Roster.getInstanceFor(connection);
+                        for (RosterEntry entry : miniroster.getEntries()) {
+                            Presence updatedPresence = new Presence(Presence.Type.unavailable);
+                            updatedPresence.setMode(Presence.Mode.available);
+                            updatedPresence.setStatus(message);
+                            updatedPresence.setTo(entry.getJid());
+                            connection.sendStanza(updatedPresence);
+                        }
+                        break;
+                    default:
+                        System.out.println("\nInvalid selection");
+                        break;
                 }
+
+
+            } catch (Exception e) {
+                System.out.println("Error while changing presence message.");
+                e.printStackTrace();
             }
-            return null;
         }
 
+        // * It is used to always accept the request sent. It is like an automatic acceptance
+        private static void RefreshRequests(AbstractXMPPConnection connection) {
+            try {
+                Roster roster = Roster.getInstanceFor(connection);
+                roster.setSubscriptionMode(Roster.SubscriptionMode.accept_all);
+        
+                System.out.println("All pending friend requests accepted.");
+            } catch (Exception e) {
+                System.out.println("Error while accepting friend requests.");
+                e.printStackTrace();
+            }
+        }
+
+        public static void FileToContact(AbstractXMPPConnection connection, Scanner scanner) {
+            try {
+                System.out.print("User Name to Send File:  ");
+                String contactUsername = scanner.next() + "@" + "alumchat.xyz";
+
+                System.out.print("Filepath:  ");
+                String filePath = scanner.next();
+                EntityBareJid jid = JidCreate.entityBareFrom(contactUsername);
+
+                ChatManager chatManager = ChatManager.getInstanceFor(connection);
+                Chat chat = chatManager.chatWith(jid);
+
+                byte[] fileData;
+                try (FileInputStream fileInputStream = new FileInputStream(filePath)) {
+                    fileData = fileInputStream.readAllBytes();
+                }
+                String base64EncodedFile = Base64.getEncoder().encodeToString(fileData);
+
+                Message message = new Message();
+                message.setBody(base64EncodedFile);
+                chat.send(message);
+
+                System.out.println("File sent to " + contactUsername);
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("Error sending file: " + e.getMessage());
+            }
+        }
 }
 
