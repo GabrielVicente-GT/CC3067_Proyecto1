@@ -26,6 +26,10 @@ import java.io.IOException;
 // * The main library used in this project is Smack and then the specific methods 
 // * used are called, the dependencies are inside the pom.xml file.
 
+import org.jivesoftware.smack.chat2.Chat;
+import org.jivesoftware.smack.chat2.ChatManager;
+// import org.jivesoftware.smack.chat2.MultiUserChat;
+import org.jivesoftware.smack.packet.Message;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -43,9 +47,14 @@ import org.jivesoftware.smack.filter.StanzaTypeFilter;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.iqregister.AccountManager;
+import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jivesoftware.smackx.muc.MultiUserChatManager;
+import org.jivesoftware.smackx.xdata.Form;
+import org.jivesoftware.smackx.xdata.packet.DataForm;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.parts.Localpart;
+import org.jxmpp.jid.parts.Resourcepart;
 
 
 // * The function of the menu class corresponds to the logic of the way in which 
@@ -206,16 +215,16 @@ public class Menu
 
                             }
                         }
-
+                        
                         // * This function allows to encode the file
-
+                        
                         public boolean isBase64Encoded(String input) {
                             String base64Pattern = "^[A-Za-z0-9+/]*={0,2}$";
                             Pattern pattern = Pattern.compile(base64Pattern);
                             Matcher matcher = pattern.matcher(input);
                             return matcher.matches();
                         }
-                        });
+                    });
 
                         // This listener is destined to always listen to notification presence about chances in the state and mode, 
                         try {
@@ -299,7 +308,7 @@ public class Menu
                                         break;
                                     case 5:
                                         System.out.println("Option -->   5");
-    
+                                        chatMenu(connection, scanner);
                                         break;
                                     case 6:
                                         System.out.println("Option -->   6");
@@ -642,5 +651,54 @@ public class Menu
                 System.out.println("Error sending file: " + e.getMessage());
             }
         }
+
+        // * This function allows to create a chat group, create and chat with one.
+
+        public static void chatGroup(AbstractXMPPConnection connection, Scanner scanner) {
+            try {
+                MultiUserChatManager mucManager = MultiUserChatManager.getInstanceFor(connection);
+
+                System.out.print("Group Name: ");
+                String groupName = scanner.nextLine();
+
+                MultiUserChat muc = mucManager.getMultiUserChat(JidCreate.entityBareFrom(groupName + "@conference.alumchat.xyz"));
+
+                muc.create(Resourcepart.from(connection.getUser().getResourceOrThrow().toString()));
+                muc.sendConfigurationForm(new Form(DataForm.Type.submit)); // Configuración predeterminada para grupo público
+
+                // Configuración adicional para hacer el grupo persistente
+                Form persistentForm = muc.getConfigurationForm().createAnswerForm();
+                persistentForm.setAnswer("muc#roomconfig_persistentroom", true);
+                muc.sendConfigurationForm(persistentForm);
+
+                System.out.println("¡Group '" + groupName + "' is now available!");
+            } catch (Exception e) {
+                System.out.println("Error creating group: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        public static void chatMenu(AbstractXMPPConnection connection, Scanner scanner) {
+            System.out.println("1. Create group");
+            System.out.println("2. Join and chat");
+            System.out.print("Select an option: ");
+
+            int optiones = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (optiones) {
+                case 1:
+                    System.out.println("Creating a new group...");
+                    chatGroup(connection, scanner);
+                    break;
+                case 2:
+                    System.out.println("Joining the group and chatting...");
+                    break;
+                default:
+                    System.out.println("Invalid option.");
+                    break;
+            }
+        }
+
 }
 
