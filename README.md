@@ -46,3 +46,7 @@ Taking into account that the previously described tools are already configured (
 - https://junit.org/junit5/
 
 You must create an empty folder where you want to have the project. You should open the terminal and do git clone to this repository. Within visual studio code open the general folder that contains src, target, pom.xml, etc. And if it is done correctly, you only need to run the project and start playing with the project. I hope this readme is helpful. Good luck!
+
+## Link presentation
+
+https://www.canva.com/design/DAFsT4oi5nE/Sv6TlXYjJ0JvI-3sObAqHw/edit?utm_content=DAFsT4oi5nE&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
